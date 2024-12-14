@@ -1,4 +1,5 @@
 import streamlit as st
+import time  # For simulating progressive updates
 
 class NextFitMemoryAllocator:
     def __init__(self, memory_blocks):
@@ -49,24 +50,30 @@ if st.button("Initialize"):
 if st.session_state.allocator:
     st.subheader("Memory Blocks Status")
     
-    # Dynamically update progress bars
+    progress_placeholders = []  # Create placeholders for progress bars
     for i, block in enumerate(st.session_state.memory_blocks):
         used = st.session_state.allocator.block_capacities[i] - block
         st.session_state.used_memory[i] = used
+        placeholder = st.empty()  # Create an empty container for the progress bar
         progress_value = int((used / st.session_state.allocator.block_capacities[i]) * 100)
-        st.progress(progress_value, text=f"Block {i+1}: {used}/{st.session_state.allocator.block_capacities[i]}")
+        placeholder.progress(progress_value, text=f"Block {i+1}: {used}/{st.session_state.allocator.block_capacities[i]}")
+        progress_placeholders.append(placeholder)
 
     # Input for memory allocation
     process_size = st.number_input("Enter Process Size to Allocate", min_value=1, step=1)
-    allocate_clicked = st.button("Allocate")
-    
-    if allocate_clicked:
-        # Perform allocation
+    if st.button("Allocate"):
         result = st.session_state.allocator.allocate_memory(process_size)
         st.session_state.memory_blocks = st.session_state.allocator.memory_blocks.copy()
         
-        # Re-render progress bars immediately
-        st.experimental_rerun()  # This ensures the app re-renders immediately after allocation
+        # Simulate real-time updates
+        for i, block in enumerate(st.session_state.memory_blocks):
+            used = st.session_state.allocator.block_capacities[i] - block
+            st.session_state.used_memory[i] = used
+            progress_value = int((used / st.session_state.allocator.block_capacities[i]) * 100)
+            progress_placeholders[i].progress(progress_value, text=f"Block {i+1}: {used}/{st.session_state.allocator.block_capacities[i]}")
+            time.sleep(0.5)  # Simulate delay for real-time effect
+        
+        st.info(result)
 
     # Reset memory blocks
     if st.button("Reset"):
