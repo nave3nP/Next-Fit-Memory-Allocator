@@ -33,7 +33,7 @@ if "allocator" not in st.session_state:
     st.session_state.used_memory = []
 
 # Memory block input
-block_sizes = st.text_input("Enter Memory Block Sizes (comma-separated)", placeholder="e.g., 100,500,300")
+block_sizes = st.text_input("Enter Memory Block Sizes (comma-separated)", placeholder="e.g., 100,400,300")
 if st.button("Initialize"):
     try:
         # Parse memory blocks
@@ -58,6 +58,8 @@ if st.session_state.allocator:
     process_size = st.number_input("Enter Process Size to Allocate", min_value=1, step=1)
     if st.button("Allocate"):
         result = st.session_state.allocator.allocate_memory(process_size)
+        # After allocation, update memory blocks in session state
+        st.session_state.memory_blocks = st.session_state.allocator.memory_blocks
         st.info(result)
 
     # Reset memory blocks
