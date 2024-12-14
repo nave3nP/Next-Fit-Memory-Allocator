@@ -49,27 +49,24 @@ if st.button("Initialize"):
 if st.session_state.allocator:
     st.subheader("Memory Blocks Status")
     
+    # Dynamically update progress bars
     for i, block in enumerate(st.session_state.memory_blocks):
-        # Calculate usage percentage
         used = st.session_state.allocator.block_capacities[i] - block
         st.session_state.used_memory[i] = used
-        
-        # Update the progress bar
-        st.progress(int((used / st.session_state.allocator.block_capacities[i]) * 100), text=f"Block {i+1}: {used}/{st.session_state.allocator.block_capacities[i]}")
-
-    # Debugging Info
-    st.write("Debugging Info:")
-    st.write(f"Memory Blocks: {st.session_state.memory_blocks}")
-    st.write(f"Used Memory: {st.session_state.used_memory}")
+        progress_value = int((used / st.session_state.allocator.block_capacities[i]) * 100)
+        st.progress(progress_value, text=f"Block {i+1}: {used}/{st.session_state.allocator.block_capacities[i]}")
 
     # Input for memory allocation
     process_size = st.number_input("Enter Process Size to Allocate", min_value=1, step=1)
-    if st.button("Allocate"):
+    allocate_clicked = st.button("Allocate")
+    
+    if allocate_clicked:
+        # Perform allocation
         result = st.session_state.allocator.allocate_memory(process_size)
-        
-        # Update memory blocks in session state
         st.session_state.memory_blocks = st.session_state.allocator.memory_blocks.copy()
-        st.info(result)
+        
+        # Re-render progress bars immediately
+        st.experimental_rerun()  # This ensures the app re-renders immediately after allocation
 
     # Reset memory blocks
     if st.button("Reset"):
