@@ -1,5 +1,5 @@
 import streamlit as st
-import time  # For simulating progressive updates
+import time
 
 class NextFitMemoryAllocator:
     def __init__(self, memory_blocks):
@@ -50,7 +50,8 @@ if st.button("Initialize"):
 if st.session_state.allocator:
     st.subheader("Memory Blocks Status")
     
-    progress_placeholders = []  # Create placeholders for progress bars
+    # Dynamically create progress bar placeholders
+    progress_placeholders = []
     for i, block in enumerate(st.session_state.memory_blocks):
         used = st.session_state.allocator.block_capacities[i] - block
         st.session_state.used_memory[i] = used
@@ -61,19 +62,23 @@ if st.session_state.allocator:
 
     # Input for memory allocation
     process_size = st.number_input("Enter Process Size to Allocate", min_value=1, step=1)
-    if st.button("Allocate"):
+    allocate_clicked = st.button("Allocate")
+    
+    if allocate_clicked:
         result = st.session_state.allocator.allocate_memory(process_size)
         st.session_state.memory_blocks = st.session_state.allocator.memory_blocks.copy()
         
-        # Simulate real-time updates
+        # Update progress bars dynamically
         for i, block in enumerate(st.session_state.memory_blocks):
             used = st.session_state.allocator.block_capacities[i] - block
             st.session_state.used_memory[i] = used
             progress_value = int((used / st.session_state.allocator.block_capacities[i]) * 100)
+            
+            # Update the corresponding placeholder immediately
             progress_placeholders[i].progress(progress_value, text=f"Block {i+1}: {used}/{st.session_state.allocator.block_capacities[i]}")
-            time.sleep(0.5)  # Simulate delay for real-time effect
         
         st.info(result)
+        st.experimental_rerun()  # Force a re-run to ensure real-time updates
 
     # Reset memory blocks
     if st.button("Reset"):
