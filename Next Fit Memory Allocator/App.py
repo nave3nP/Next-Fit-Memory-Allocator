@@ -1,10 +1,11 @@
 import tkinter as tk
 from tkinter import messagebox
 
+
 class NextFitMemoryAllocator:
     def __init__(self, memory_blocks):
-        self.memory_blocks = memory_blocks
-        self.last_allocated_index = 0
+        self.memory_blocks = memory_blocks  # List of block sizes
+        self.last_allocated_index = 0  # Start from the first block
 
     def allocate_memory(self, process_size):
         n = len(self.memory_blocks)
@@ -19,7 +20,7 @@ class NextFitMemoryAllocator:
         return f"Failed to allocate process of size {process_size}. Not enough memory."
 
     def get_memory_state(self):
-        return [f"Block {i + 1}: {size} units free" for i, size in enumerate(self.memory_blocks)]
+        return self.memory_blocks
 
 
 class MemoryAllocatorApp:
@@ -27,21 +28,22 @@ class MemoryAllocatorApp:
         self.root = root
         self.root.title("Next Fit Memory Allocator")
 
-        self.memory_blocks = [100, 500, 200, 300, 600]  # Example memory block sizes
+        self.memory_blocks = [100, 500, 200, 300, 600]  # Example memory sizes
         self.allocator = NextFitMemoryAllocator(self.memory_blocks)
 
+        self.block_canvas = None  # For graphical representation
         self.create_widgets()
 
     def create_widgets(self):
-        # Title Label
+        # Title
         tk.Label(self.root, text="Next Fit Memory Allocator", font=("Arial", 16)).pack(pady=10)
 
-        # Memory Display
-        self.memory_display = tk.Text(self.root, width=50, height=10, state=tk.DISABLED)
-        self.memory_display.pack(pady=10)
+        # Memory Canvas
+        self.block_canvas = tk.Canvas(self.root, width=600, height=200, bg="white")
+        self.block_canvas.pack(pady=10)
         self.update_memory_display()
 
-        # Input and Allocate Button
+        # Input Section
         self.input_frame = tk.Frame(self.root)
         self.input_frame.pack(pady=10)
 
@@ -49,15 +51,25 @@ class MemoryAllocatorApp:
         self.process_size_entry = tk.Entry(self.input_frame, width=10)
         self.process_size_entry.grid(row=0, column=1)
 
+        # Allocate Button
         self.allocate_button = tk.Button(self.input_frame, text="Allocate", command=self.allocate_memory)
         self.allocate_button.grid(row=0, column=2, padx=10)
 
     def update_memory_display(self):
-        self.memory_display.config(state=tk.NORMAL)
-        self.memory_display.delete(1.0, tk.END)
-        memory_state = self.allocator.get_memory_state()
-        self.memory_display.insert(tk.END, "\n".join(memory_state))
-        self.memory_display.config(state=tk.DISABLED)
+        self.block_canvas.delete("all")  # Clear the canvas
+        total_memory = sum(self.memory_blocks)
+        current_x = 10  # Start position for the first block
+        canvas_width = 580  # Total width for visualization
+        for i, block in enumerate(self.memory_blocks):
+            block_width = int((block / total_memory) * canvas_width)
+            color = "green" if block > 0 else "red"  # Green for available, red for exhausted
+            self.block_canvas.create_rectangle(
+                current_x, 50, current_x + block_width, 150, fill=color, outline="black"
+            )
+            self.block_canvas.create_text(
+                current_x + block_width / 2, 100, text=f"Block {i + 1}\n{block} units", fill="white"
+            )
+            current_x += block_width + 10  # Leave space between blocks
 
     def allocate_memory(self):
         try:
