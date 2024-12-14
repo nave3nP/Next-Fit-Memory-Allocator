@@ -1,4 +1,5 @@
 import streamlit as st
+import time
 
 class NextFitMemoryAllocator:
     def __init__(self, memory_blocks):
@@ -48,19 +49,36 @@ if st.button("Initialize"):
 # Display progress bars for memory blocks
 if st.session_state.allocator:
     st.subheader("Memory Blocks Status")
+    
+    # Dynamically create progress bar placeholders
+    progress_placeholders = []
     for i, block in enumerate(st.session_state.memory_blocks):
-        # Calculate usage percentage
         used = st.session_state.allocator.block_capacities[i] - block
         st.session_state.used_memory[i] = used
-        st.progress(int((used / st.session_state.allocator.block_capacities[i]) * 100), text=f"Block {i+1}: {used}/{st.session_state.allocator.block_capacities[i]}")
+        placeholder = st.empty()  # Create an empty container for the progress bar
+        progress_value = int((used / st.session_state.allocator.block_capacities[i]) * 100)
+        placeholder.progress(progress_value, text=f"Block {i+1}: {used}/{st.session_state.allocator.block_capacities[i]}")
+        progress_placeholders.append(placeholder)
 
     # Input for memory allocation
     process_size = st.number_input("Enter Process Size to Allocate", min_value=1, step=1)
-    if st.button("Allocate"):
+    allocate_clicked = st.button("Allocate")
+    
+    if allocate_clicked:
         result = st.session_state.allocator.allocate_memory(process_size)
-        # After allocation, update memory blocks in session state
-        st.session_state.memory_blocks = st.session_state.allocator.memory_blocks
+        st.session_state.memory_blocks = st.session_state.allocator.memory_blocks.copy()
+        
+        # Update progress bars dynamically
+        for i, block in enumerate(st.session_state.memory_blocks):
+            used = st.session_state.allocator.block_capacities[i] - block
+            st.session_state.used_memory[i] = used
+            progress_value = int((used / st.session_state.allocator.block_capacities[i]) * 100)
+            
+            # Update the corresponding placeholder immediately
+            progress_placeholders[i].progress(progress_value, text=f"Block {i+1}: {used}/{st.session_state.allocator.block_capacities[i]}")
+        
         st.info(result)
+        st.experimental_rerun()  # Force a re-run to ensure real-time updates
 
     # Reset memory blocks
     if st.button("Reset"):
